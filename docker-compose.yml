@@ -1,0 +1,18 @@
+services:
+  api:
+    build: .
+    environment:
+      INVSYS_SECRET: "please-change-me-in-production"
+    ports:
+      - "8000:8000"
+    volumes:
+      - invsys-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  invsys-data:

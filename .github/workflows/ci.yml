@@ -1,0 +1,27 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 跑单元测试
+        run: python -m unittest discover -s tests -t . -v
+      - name: 冒烟：启动服务并访问健康检查
+        run: |
+          python -m invsys --port 8000 --db /tmp/ci.db &
+          sleep 2
+          python - <<'PY'
+          import json, urllib.request
+          body = json.load(urllib.request.urlopen("http://127.0.0.1:8000/api/health"))
+          assert body["status"] == "ok", body
+          print("health ok:", body)
+          PY

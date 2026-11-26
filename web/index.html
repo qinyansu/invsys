@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>进销存管理 · invsys</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- 登录 -->
+<div id="login-view" class="login-wrap">
+  <form id="login-form" class="login-card">
+    <h1>进销存管理</h1>
+    <p class="sub">商品 · 库存 · 采购 · 销售 · 报表</p>
+    <label>账号<input id="username" value="admin" autocomplete="username"></label>
+    <label>密码<input id="password" type="password" value="admin123" autocomplete="current-password"></label>
+    <button type="submit" class="primary">登录</button>
+    <p class="hint">默认账号：admin / admin123（管理员）　clerk / clerk123（业务员）</p>
+  </form>
+</div>
+
+<!-- 主界面 -->
+<div id="app-view" class="app hidden">
+  <aside class="sidebar">
+    <div class="brand">invsys</div>
+    <nav>
+      <button class="nav-item active" data-tab="dashboard">仪表盘</button>
+      <button class="nav-item" data-tab="products">商品</button>
+      <button class="nav-item" data-tab="customers">客户</button>
+      <button class="nav-item" data-tab="orders">销售订单</button>
+      <button class="nav-item" data-tab="stock">库存</button>
+      <button class="nav-item" data-tab="purchase">采购入库</button>
+      <button class="nav-item" data-tab="sale">销售出库</button>
+      <button class="nav-item" data-tab="movements">库存流水</button>
+      <button class="nav-item" data-tab="report">报表</button>
+    </nav>
+    <div class="user-box">
+      <span id="whoami">-</span>
+      <button id="logout" class="link">退出</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <header class="topbar">
+      <h2 id="page-title">商品</h2>
+      <span id="stat" class="stat"></span>
+    </header>
+
+    <!-- 仪表盘 -->
+    <section id="tab-dashboard" class="tab">
+      <div class="cards" id="dashboard-cards"></div>
+      <h3>热销商品 TOP5（已发货）</h3>
+      <table class="grid">
+        <thead><tr><th>SKU</th><th>名称</th><th>销量</th><th>销售额</th></tr></thead>
+        <tbody id="top-body"></tbody>
+      </table>
+    </section>
+
+    <!-- 商品 -->
+    <section id="tab-products" class="tab hidden">
+      <div class="toolbar">
+        <input id="product-search" placeholder="搜索 SKU 或名称">
+        <button id="product-search-btn">搜索</button>
+        <button id="product-new" class="primary">新建商品</button>
+      </div>
+      <table class="grid">
+        <thead><tr><th>ID</th><th>SKU</th><th>名称</th><th>单位</th><th>安全库存</th><th>分类</th></tr></thead>
+        <tbody id="product-body"></tbody>
+      </table>
+    </section>
+
+    <!-- 库存 -->
+    <section id="tab-stock" class="tab hidden">
+      <div class="toolbar">
+        <select id="stock-warehouse"><option value="">全部仓库</option></select>
+        <input id="stock-search" placeholder="搜索 SKU 或名称">
+        <button id="stock-search-btn">查询</button>
+      </div>
+      <table class="grid">
+        <thead><tr><th>SKU</th><th>名称</th><th>仓库</th><th>库存</th><th>安全库存</th><th>状态</th></tr></thead>
+        <tbody id="stock-body"></tbody>
+      </table>
+    </section>
+
+    <!-- 客户 -->
+    <section id="tab-customers" class="tab hidden">
+      <div class="toolbar">
+        <input id="customer-search" placeholder="搜索客户名或电话">
+        <button id="customer-search-btn">搜索</button>
+        <button id="customer-new" class="primary">新建客户</button>
+      </div>
+      <table class="grid">
+        <thead><tr><th>ID</th><th>客户名称</th><th>电话</th><th>地址</th><th>创建时间</th></tr></thead>
+        <tbody id="customer-body"></tbody>
+      </table>
+    </section>
+
+    <!-- 销售订单 -->
+    <section id="tab-orders" class="tab hidden">
+      <div class="toolbar">
+        <select id="order-status">
+          <option value="">全部状态</option>
+          <option value="draft">草稿</option>
+          <option value="confirmed">已确认</option>
+          <option value="shipped">已发货</option>
+          <option value="cancelled">已取消</option>
+        </select>
+        <button id="order-refresh">刷新</button>
+        <button id="order-new" class="primary">新建订单</button>
+      </div>
+      <p class="hint">状态流转：草稿 → 确认 → 发货（发货时扣库存）；草稿/已确认可取消，已发货不能取消。</p>
+      <table class="grid">
+        <thead><tr><th>订单号</th><th>客户</th><th>金额</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+        <tbody id="order-body"></tbody>
+      </table>
+    </section>
+
+    <!-- 采购入库 / 销售出库 共用表单 -->
+    <section id="tab-purchase" class="tab hidden">
+      <div class="panel">
+        <h3>采购入库</h3>
+        <div class="form-row"><label>单据号<input id="purchase-no"></label>
+          <label>仓库<select id="purchase-warehouse"></select></label></div>
+        <div class="form-row"><label>SKU<input id="purchase-sku" placeholder="SKU-001"></label>
+          <label>数量<input id="purchase-qty" type="number" value="10" min="1"></label>
+          <label>单价<input id="purchase-price" type="number" value="5" step="0.01"></label></div>
+        <button id="purchase-submit" class="primary">提交入库</button>
+      </div>
+      <table class="grid"><thead><tr><th>单号</th><th>类型</th><th>金额</th><th>时间</th></tr></thead>
+        <tbody id="purchase-body"></tbody></table>
+    </section>
+
+    <section id="tab-sale" class="tab hidden">
+      <div class="panel">
+        <h3>销售出库</h3>
+        <div class="form-row"><label>单据号<input id="sale-no"></label>
+          <label>仓库<select id="sale-warehouse"></select></label></div>
+        <div class="form-row"><label>SKU<input id="sale-sku" placeholder="SKU-001"></label>
+          <label>数量<input id="sale-qty" type="number" value="1" min="1"></label>
+          <label>单价<input id="sale-price" type="number" value="9" step="0.01"></label></div>
+        <button id="sale-submit" class="primary">提交出库</button>
+        <p class="hint">库存不足会整单回滚（返回 409）。</p>
+      </div>
+      <table class="grid"><thead><tr><th>单号</th><th>类型</th><th>金额</th><th>时间</th></tr></thead>
+        <tbody id="sale-body"></tbody></table>
+    </section>
+
+    <!-- 流水 -->
+    <section id="tab-movements" class="tab hidden">
+      <div class="toolbar"><button id="movement-refresh">刷新</button></div>
+      <table class="grid">
+        <thead><tr><th>时间</th><th>SKU</th><th>类型</th><th>变动</th><th>变动前</th><th>变动后</th></tr></thead>
+        <tbody id="movement-body"></tbody>
+      </table>
+    </section>
+
+    <!-- 报表 -->
+    <section id="tab-report" class="tab hidden">
+      <div class="cards" id="summary-cards"></div>
+      <h3>低库存预警</h3>
+      <table class="grid">
+        <thead><tr><th>SKU</th><th>名称</th><th>安全库存</th><th>当前库存</th></tr></thead>
+        <tbody id="low-stock-body"></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>
