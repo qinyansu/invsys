@@ -1,5 +1,9 @@
 # 进销存后端（invsys）
 
+![CI](https://github.com/qinyansu/invsys/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.9%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+
 一个开箱可跑的**采购-库存-销售**后端服务，只用 Python 标准库
 （`http.server` + `sqlite3` + `unittest`），按 `db → service → api` 三层组织。
 
